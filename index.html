@@ -89,11 +89,11 @@
 
       var Posts = React.createClass({
         componentDidMount: function() {
-          socket.on('post', this.handleData);
+          socket.on('request', this.handleData);
         },
 
         componentWillUnmount: function() {
-          socket.removeListener('post', this.handleData);
+          socket.removeListener('request', this.handleData);
         },
 
         getInitialState: function () {
@@ -108,12 +108,17 @@
         },
 
         handleData: function(data) {
+          var date = new Date();
           var parsedData = JSON.parse(data);
-          var post = {
-            message: new Date().toString(),
-            headers: parsedData.headers,
-            body: parsedData.body
-          };
+          var post = {};
+
+          post.message = parsedData.method + ': ' + date.toString();
+          post.headers =  parsedData.headers;
+          post.body =  '';
+
+          if ('body' in parsedData) {
+            post.body = parsedData.body;
+          }
 
           if (this.state.init === true) {
             this.setState({

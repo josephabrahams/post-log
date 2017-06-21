@@ -24,9 +24,21 @@ app.get('/', function(req, res) {
 
 app.post('/', upload.array(), function(req, res) {
   var data = {
+    method: 'POST',
     headers: req.headers,
-    body: req.body
+    body: req.body,
   };
-  io.emit('post', JSON.stringify(data));
+  io.emit('request', JSON.stringify(data));
+  res.end();
+});
+
+app.get('/get', upload.array(), function(req, res) {
+  var data = {
+    method: 'GET',
+    headers: req.headers
+  };
+
+  io.emit('request', JSON.stringify(data));
+  res.send('Success');
   res.end();
 });
