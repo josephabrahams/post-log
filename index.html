@@ -24,25 +24,30 @@
         padding-left: 0;
       }
 
-      .post__message {
-        font-size: 1em;
-        font-style: italic;
-        font-weight: normal;
-        margin-bottom: 10px;
-        margin-top: 0px;
-      }
+        .post__time {
+          display: block;
+          font-style: italic;
+          margin-bottom: 1em;
+        }
 
-      .post__list {
-        list-style: none;
-        margin-bottom: 10px;
-        padding-left: 0;
-      }
+        .post__message {
+          font-size: 1em;
+          font-weight: normal;
+          margin-bottom: 1em;
+          margin-top: 0px;
+        }
 
-      .post__border {
-        display: block;
-        margin-bottom: 1em;
-        margin-top: 1em;
-      }
+        .post__list {
+          list-style: none;
+          margin-bottom: 10px;
+          padding-left: 0;
+        }
+
+        .post__border {
+          display: block;
+          margin-bottom: 2em;
+          margin-top: 2em;
+        }
     </style>
   </head>
   <body>
@@ -58,26 +63,23 @@
 
       var Post = React.createClass({
         render: function() {
-
           var post = this.props.post;
-          var message = post.message;
-          var headers = post.headers;
-          var body = post.body;
 
           return (
             <li className="post">
-              <h2 className="post__message">{message}</h2>
+              <time className="post__time">{post.time}</time>
+              <h2 className="post__message">{post.message}</h2>
               <ul className="post__list">
-                {Object.keys(headers).map(function(header, index) {
+                {Object.keys(post.headers).map(function(header, index) {
                   return (
-                    <li key={index}>{header}: {headers[header]}</li>
+                    <li key={index}>{header}: {post.headers[header]}</li>
                   );
                 })}
               </ul>
               <ul className="post__list">
-                {Object.keys(body).map(function(field, index) {
+                {Object.keys(post.body).map(function(field, index) {
                   return (
-                    <li key={index}>{field}: {body[field]}</li>
+                    <li key={index}>{field}: {post.body[field]}</li>
                   );
                 })}
               </ul>
@@ -108,11 +110,11 @@
         },
 
         handleData: function(data) {
-          var date = new Date();
           var parsedData = JSON.parse(data);
           var post = {};
 
-          post.message = parsedData.method + ': ' + date.toString();
+          post.time = new Date().toString();
+          post.message = parsedData.method + ' ' + parsedData.url;
           post.headers =  parsedData.headers;
           post.body =  '';
 

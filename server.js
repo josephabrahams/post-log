@@ -25,6 +25,7 @@ app.get('/', function(req, res) {
 app.post('/', upload.array(), function(req, res) {
   var data = {
     method: 'POST',
+    url: req.url,
     headers: req.headers,
     body: req.body,
   };
@@ -35,6 +36,7 @@ app.post('/', upload.array(), function(req, res) {
 app.get('/get', upload.array(), function(req, res) {
   var data = {
     method: 'GET',
+    url: req.url,
     headers: req.headers
   };
 
