@@ -1,6 +1,6 @@
 # post-log
 
-Log the contents of a POST (or GET) request to the browser using web sockets
+Log the contents of a POST request to the browser using web sockets.
 
 ## Quick Start
 

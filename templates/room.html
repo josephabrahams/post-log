@@ -59,7 +59,7 @@
     <script src="https://fb.me/react-0.14.7.js"></script>
     <script src="https://fb.me/react-dom-0.14.7.js"></script>
     <script type="text/babel">
-      var socket = io();
+      var socket = io('/rooms', { query: 'room={{ room }}' });
 
       var Post = React.createClass({
         render: function() {
