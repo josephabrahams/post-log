@@ -80,3 +80,16 @@ app.post('/:room', isValidRoom, upload.array(), (req, res) => {
   rooms.to(req.params.room).emit('request', JSON.stringify(data));
   res.end();
 });
+
+
+app.get('/:room/get', isValidRoom, upload.array(), (req, res) => {
+  var data = {
+    method: 'GET',
+    url: req.url,
+    headers: req.headers
+  };
+
+  rooms.to(req.params.room).emit('request', JSON.stringify(data));
+  res.send('Success\n');
+  res.end();
+});
