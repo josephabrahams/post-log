@@ -64,6 +64,7 @@ rooms.on('connection', (socket) => {
 });
 
 app.get('/:room', isValidRoom, (req, res) => {
+  res.set('Cache-Control', 'public, max-age=300');
   res.render('room.html', {
     room: req.params.room
   });
