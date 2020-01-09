@@ -1,16 +1,25 @@
 /* eslint-env node, es6 */
 /* eslint-disable no-console, no-unused-vars */
 
-var app = require('express')();
-var server = require('http').createServer(app);
-var io = require('socket.io')(server);
-var bodyParser = require('body-parser');
-var methodOverride = require('method-override');
-var nunjucks = require('nunjucks');
-var shortid = require('shortid');
-var upload = require('multer')();
+const app = require('express')();
+const server = require('http').createServer(app);
+const io = require('socket.io')(server);
+const bodyParser = require('body-parser');
+const methodOverride = require('method-override');
+const nunjucks = require('nunjucks');
+const shortid = require('shortid');
+const upload = require('multer')();
 
-server.listen(process.env.PORT || 5000);
+const port = process.env.PORT || 5000;
+const rooms = io.of('/rooms');
+
+
+/**
+ * Configure the app
+ */
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 nunjucks.configure('templates', {
     autoescape: true,
@@ -18,79 +27,93 @@ nunjucks.configure('templates', {
     express: app
 });
 
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  next();
+rooms.on('connection', (socket) => {
+  socket.join(socket.handshake.query.room);
 });
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(logErrors)
-app.use(errorHandler)
 
-function logErrors (err, req, res, next) {
-  console.error(err);
-  next(err);
+/**
+ * Middleware
+ */
+
+function cacheMiddleware (req, res, next) {
+  res.set('Cache-Control', 'public, max-age=300');
+  next();
 }
 
-function errorHandler (err, req, res, next) {
-  res.status(err.statusCode).send({
-    errors: [
-      {
-        status: String(err.statusCode)
-      }
-    ]
-  });
+function corsMiddleware (req, res, next) {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, Content-Type');
+  next();
 }
 
-function isValidRoom (req, res, next) {
+function invalidRoomsMiddleware (req, res, next) {
   if (!shortid.isValid(req.params.room)) {
     res.sendStatus(404);
     res.end();
     return;
   }
-
   next();
 }
+
+
+/**
+ * Redirect naked requests to a random room
+ * and render the frontend app
+ */
 
 app.get('/', (req, res) => {
   res.redirect('/' + shortid.generate());
 });
 
-var rooms = io.of('/rooms');
-rooms.on('connection', (socket) => {
-  socket.join(socket.handshake.query.room);
-});
-
-app.get('/:room', isValidRoom, (req, res) => {
-  res.set('Cache-Control', 'public, max-age=300');
+app.get('/:room', cacheMiddleware, invalidRoomsMiddleware, (req, res) => {
   res.render('room.html', {
     room: req.params.room
   });
 });
 
-app.post('/:room', isValidRoom, upload.array(), (req, res) => {
+
+/**
+ * Send socket events for POST, OPTIONS, and GET requests
+ * to the frontend who's in the appropriate room
+ */
+
+app.post('/:room', corsMiddleware, invalidRoomsMiddleware, upload.array(), (req, res) => {
   var data = {
     method: 'POST',
     url: req.url,
     headers: req.headers,
     body: req.body,
   };
-
   rooms.to(req.params.room).emit('request', JSON.stringify(data));
   res.end();
 });
 
+app.options('/:room', cacheMiddleware, corsMiddleware, invalidRoomsMiddleware, (req, res) => {
+  console.log('foo');
+  var data = {
+    method: 'OPTIONS',
+    url: req.url,
+    headers: req.headers
+  };
+  rooms.to(req.params.room).emit('request', JSON.stringify(data));
+  res.end();
+});
 
-app.get('/:room/get', isValidRoom, upload.array(), (req, res) => {
+app.get('/:room/get', corsMiddleware, invalidRoomsMiddleware, (req, res) => {
   var data = {
     method: 'GET',
     url: req.url,
     headers: req.headers
   };
-
   rooms.to(req.params.room).emit('request', JSON.stringify(data));
-  res.send('Success\n');
   res.end();
 });
+
+
+/**
+ * Get this party started
+ */
+
+server.listen(port);
+console.log(`Listening on http://localhost:${port}`);
