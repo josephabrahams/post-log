@@ -58,8 +58,8 @@ function invalidRoomsMiddleware (req, res, next) {
 
 
 /**
- * Redirect naked requests to a random room
- * and render the frontend app
+ * Redirect naked requests to a random room and use sockets to update
+ * the room frontend for all requests regardless of method to /:room/data.
  */
 
 app.get('/', (req, res) => {
@@ -72,40 +72,13 @@ app.get('/:room', cacheMiddleware, invalidRoomsMiddleware, (req, res) => {
   });
 });
 
-
-/**
- * Send socket events for POST, OPTIONS, and GET requests
- * to the frontend who's in the appropriate room
- */
-
-app.post('/:room', corsMiddleware, invalidRoomsMiddleware, upload.array(), (req, res) => {
+app.all( '/:room/data', [corsMiddleware, invalidRoomsMiddleware, upload.array()], (req, res) => {
   var data = {
-    method: 'POST',
-    url: req.url,
-    headers: req.headers,
-    body: req.body,
-  };
-  rooms.to(req.params.room).emit('request', JSON.stringify(data));
-  res.end();
-});
-
-app.options('/:room', cacheMiddleware, corsMiddleware, invalidRoomsMiddleware, (req, res) => {
-  console.log('foo');
-  var data = {
-    method: 'OPTIONS',
+    method: req.method,
     url: req.url,
     headers: req.headers
   };
-  rooms.to(req.params.room).emit('request', JSON.stringify(data));
-  res.end();
-});
-
-app.get('/:room/get', corsMiddleware, invalidRoomsMiddleware, (req, res) => {
-  var data = {
-    method: 'GET',
-    url: req.url,
-    headers: req.headers
-  };
+  if (req.body) { data.body = req.body; }
   rooms.to(req.params.room).emit('request', JSON.stringify(data));
   res.end();
 });
