@@ -6,9 +6,10 @@
     <meta name="robots" content="noindex, nofollow">
     <style>
       body {
-        font-family: "Helvetica Neue", helvetica, arial;
+        font-family: monospace;
         padding: 1em;
-        line-height: 1.3;
+        line-height: 1.5;
+        font-size: 14px;
       }
 
       h1 {
@@ -27,6 +28,7 @@
       .post__time {
         display: block;
         font-style: italic;
+        font-weight: bold;
         margin-bottom: 1em;
       }
 
@@ -42,6 +44,8 @@
         margin-bottom: 10px;
         padding-left: 0;
       }
+
+      .post__body {}
 
       .post__border {
         display: block;
@@ -87,13 +91,7 @@
                   );
                 })}
               </ul>
-              <ul className="post__list">
-                {Object.keys(post.body).map(function(field, index) {
-                  return (
-                    <li key={index}>{field}: {post.body[field]}</li>
-                  );
-                })}
-              </ul>
+              <pre className="post__body">{JSON.stringify(post.body, null, 2)}</pre>
             </li>
           );
         }
@@ -120,8 +118,26 @@
         },
 
         handleData: function(data) {
+          console.log(data);
+
           var parsedData = JSON.parse(data);
           var post = {};
+
+          var totalHeight, currentScroll, visibleHeight;
+          var atBottom = false;
+
+          if (document.documentElement.scrollTop) {
+            currentScroll = document.documentElement.scrollTop;
+          } else {
+            currentScroll = document.body.scrollTop;
+          }
+  
+          totalHeight = document.body.offsetHeight;
+          visibleHeight = document.documentElement.clientHeight;
+
+          if (totalHeight <= currentScroll + visibleHeight ) {
+            atBottom = true;
+          }
 
           post.time = new Date().toString();
           post.message = parsedData.method + ' ' + parsedData.url;
@@ -137,12 +153,16 @@
               posts: [post],
               init: false
             });
+            window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
             return;
           }
 
           this.setState({
             posts: this.state.posts.concat(post)
           });
+          if (atBottom) {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+          }
         },
 
         render: function() {
