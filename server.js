@@ -10,7 +10,7 @@ const nunjucks = require('nunjucks');
 const shortid = require('shortid');
 const upload = require('multer')();
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 4000;
 const rooms = io.of('/rooms');
 
 
