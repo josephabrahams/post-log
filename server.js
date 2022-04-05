@@ -80,7 +80,7 @@ app.all( '/:room/data', [corsMiddleware, invalidRoomsMiddleware, upload.array()]
   };
   if (req.body) { data.body = req.body; }
   rooms.to(req.params.room).emit('request', JSON.stringify(data));
-  res.end();
+  res.json(data);
 });
 
 
