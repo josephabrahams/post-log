@@ -5,7 +5,6 @@ const app = require('express')();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const bodyParser = require('body-parser');
-const methodOverride = require('method-override');
 const nunjucks = require('nunjucks');
 const shortid = require('shortid');
 const upload = require('multer')();
