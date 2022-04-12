@@ -12,10 +12,14 @@ const upload = require('multer')();
 const port = process.env.PORT || 4000;
 const rooms = io.of('/rooms');
 
-
 /**
  * Configure the app
  */
+
+if (process.env.NODE_ENV !== 'production') {
+  const morgan = require('morgan');
+  app.use(morgan('dev'));
+}
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
