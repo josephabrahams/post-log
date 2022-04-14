@@ -16,6 +16,8 @@ const rooms = io.of('/rooms');
  * Configure the app
  */
 
+app.disable('x-powered-by');
+
 if (process.env.NODE_ENV !== 'production') {
   const morgan = require('morgan');
   app.use(morgan('dev'));
