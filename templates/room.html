@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>post-log</title>
-    <meta charset="utf-8">
-    <meta name="robots" content="noindex, nofollow">
+    <title>{{ room }}</title>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex, nofollow" />
     <style>
       body {
         font-family: monospace;
@@ -45,7 +45,8 @@
         padding-left: 0;
       }
 
-      .post__body {}
+      .post__body {
+      }
 
       .post__border {
         display: block;
@@ -56,16 +57,18 @@
   </head>
   <body>
     <h1>{{ room }}</h1>
-    <p>Send requests to <a id="data" href="/{{ room }}/data">/{{ room }}/data</a>.</p>
-    <div id="container">
-    </div>
+    <p>
+      Send requests to
+      <a id="data" href="/{{ room }}/data">/{{ room }}/data</a>.
+    </p>
+    <div id="container"></div>
 
     <script>
-        var data = document.getElementById('data');
-        data.addEventListener('click', function(event) {
-          event.preventDefault();
-          fetch(data.href);
-        });
+      var data = document.getElementById("data");
+      data.addEventListener("click", function (event) {
+        event.preventDefault();
+        fetch(data.href);
+      });
     </script>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -73,10 +76,10 @@
     <script src="https://fb.me/react-0.14.7.js"></script>
     <script src="https://fb.me/react-dom-0.14.7.js"></script>
     <script type="text/babel">
-      var socket = io('/rooms', { query: 'room={{ room }}' });
+      var socket = io("/rooms", { query: "room={{ room }}" });
 
       var Post = React.createClass({
-        render: function() {
+        render: function () {
           var post = this.props.post;
 
           return (
@@ -85,39 +88,45 @@
               <time className="post__time">{post.time}</time>
               <h2 className="post__message">{post.message}</h2>
               <ul className="post__list">
-                {Object.keys(post.headers).map(function(header, index) {
+                {Object.keys(post.headers).map(function (header, index) {
                   return (
-                    <li key={index}>{header}: {post.headers[header]}</li>
+                    <li key={index}>
+                      {header}: {post.headers[header]} { (header === "x-hub-signature-256") && (post.verified !== undefined) && (post.verified ? <span> &#9989;</span> : <span> &#9940;</span>) }
+                    </li>
                   );
                 })}
               </ul>
-              <pre className="post__body">{JSON.stringify(post.body, null, 2)}</pre>
+              <pre className="post__body">
+                {JSON.stringify(post.body, null, 2)}
+              </pre>
             </li>
           );
-        }
+        },
       });
 
       var Posts = React.createClass({
-        componentDidMount: function() {
-          socket.on('request', this.handleData);
+        componentDidMount: function () {
+          socket.on("request", this.handleData);
         },
 
-        componentWillUnmount: function() {
-          socket.removeListener('request', this.handleData);
+        componentWillUnmount: function () {
+          socket.removeListener("request", this.handleData);
         },
 
         getInitialState: function () {
           return {
-            posts: [{
-              message: this.props.message,
-              headers: {},
-              body: {}
-            }],
-            init: true
+            posts: [
+              {
+                message: this.props.message,
+                headers: {},
+                body: {},
+              },
+            ],
+            init: true,
           };
         },
 
-        handleData: function(data) {
+        handleData: function (data) {
           var parsedData = JSON.parse(data);
           var post = {};
 
@@ -129,57 +138,65 @@
           } else {
             currentScroll = document.body.scrollTop;
           }
-  
+
           totalHeight = document.body.offsetHeight;
           visibleHeight = document.documentElement.clientHeight;
 
-          if (totalHeight <= currentScroll + visibleHeight ) {
+          if (totalHeight <= currentScroll + visibleHeight) {
             atBottom = true;
           }
 
           post.time = new Date().toString();
-          post.message = parsedData.method + ' ' + parsedData.url;
-          post.headers =  parsedData.headers;
-          post.body =  '';
+          post.message = parsedData.method + " " + parsedData.url;
+          post.headers = parsedData.headers;
+          if (parsedData.verified !== undefined) {
+            post.verified = parsedData.verified;
+          }
+          post.body = "";
 
-          if ('body' in parsedData) {
+          if ("body" in parsedData) {
             post.body = parsedData.body;
           }
 
           if (this.state.init === true) {
             this.setState({
               posts: [post],
-              init: false
+              init: false,
             });
-            window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+            window.scrollTo({
+              top: document.body.scrollHeight,
+              behavior: "smooth",
+            });
             return;
           }
 
           this.setState({
-            posts: this.state.posts.concat(post)
+            posts: this.state.posts.concat(post),
           });
           if (atBottom) {
-            window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+            window.scrollTo({
+              top: document.body.scrollHeight,
+              behavior: "smooth",
+            });
           }
         },
 
-        render: function() {
+        render: function () {
           var posts = this.state.posts;
 
           return (
             <ul className="posts">
-              {posts.map(function(post, index) {
-                return (
-                  <Post key={index} post={post} />
-                )
+              {posts.map(function (post, index) {
+                return <Post key={index} post={post} />;
               })}
             </ul>
           );
-        }
+        },
       });
 
       ReactDOM.render(
-        <Posts message="Waiting for POSTs..." />, document.getElementById('container')
+        <Posts message="Waiting for POSTs..." />,
+        document.getElementById("container")
       );
     </script>
   </body>
